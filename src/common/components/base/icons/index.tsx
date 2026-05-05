@@ -16,4 +16,3 @@ export { default as VehicleIcon } from "./VehicleIcon";
 export { default as WarehouseIcon } from "./WarehouseIcon";
 export { default as WarningDeleteIcon } from "./WarningDeleteIcon";
 export { default as WarningIcon } from "./WarningIcon";
-export { default as PricingIcon } from "./PricingIcon";

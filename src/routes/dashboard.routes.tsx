@@ -1,9 +1,9 @@
-import LazyLoad from "@/components/base/lazyLoad/index";
+import LazyLoad from "@/common/components/base/lazyLoad";
 import React from "react";
 import type { RouteObject } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 
-const DashboardPage = React.lazy(() => import("@/pages/dashboarch/pages"));
+const DashboardPage = React.lazy(() => import("@/modules/dashboarch/pages"));
 
 export const dashboardRoutes: RouteObject[] = [
   {
