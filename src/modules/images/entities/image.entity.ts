@@ -1,9 +1,22 @@
-import { BaseEntity } from 'src/common/entities/base.entity';
-import { TypeImage } from 'src/common/enums/type-image.enum';
-import { Column, Entity } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+export enum TypeImage {
+  AVATAR = 'avatar',
+  COVER = 'cover',
+  STORY = 'story',
+}
 
 @Entity('images')
-export class Image extends BaseEntity {
+export class Image {
+  @PrimaryGeneratedColumn()
+  id: number;
+
   @Column({ unique: true })
   url: string;
 
@@ -15,4 +28,10 @@ export class Image extends BaseEntity {
 
   @Column()
   type: TypeImage;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

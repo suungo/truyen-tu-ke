@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Image } from '../entities/image.entity';
 import { Repository } from 'typeorm';
 import { CloudinaryService } from 'src/services/cloudinary.service';
-import { TypeImage } from 'src/common/enums/type-image.enum';
+import { TypeImage } from '../entities/image.entity';
 
 @Injectable()
 export class ImagesService {
@@ -39,8 +39,8 @@ export class ImagesService {
 
     // 4. Lưu ảnh mới
     const newImage = this.imageRepository.create({
-      url: uploadResult.secure_url,
-      publicId: uploadResult.public_id,
+      url: uploadResult.secureUrl,
+      publicId: uploadResult.publicId,
       refId,
       type,
     });

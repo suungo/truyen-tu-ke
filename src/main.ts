@@ -1,3 +1,10 @@
+import * as crypto from 'crypto';
+if (!global.crypto) {
+  Object.defineProperty(global, 'crypto', {
+    value: crypto,
+  });
+}
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -5,17 +12,17 @@ import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { json, urlencoded } from 'body-parser';
 import { Request, Response } from 'express';
-import { SeederRunner } from './seeds/seeder-runner';
 
 async function bootstrap() {
-  const PORT = process.env.APP_PORT || 3000;
+  const PORT = process.env.PORT || process.env.APP_PORT || 4000;
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  const seeder = app.get(SeederRunner);
-  await seeder.runAllSeeders();
-
   app.enableCors({
-    origin: '*',
+    origin: [
+      'https://www.truyen-tu-ke.io.vn',
+      'https://truyen-tu-ke.io.vn',
+      'http://localhost:4000',
+    ],
     allowedHeaders: [
       'Content-Type',
       'Authorization',
@@ -23,10 +30,33 @@ async function bootstrap() {
       'X-Requested-With',
       'X-Session-Id',
       'Idempotency-Key',
+      'x-api-secret',
     ],
     exposedHeaders: ['authorization'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
+  });
+
+  // Middleware bảo mật Header ngăn gọi API trực tiếp
+  app.use((req: Request, res: Response, next: () => void) => {
+    const url = req.originalUrl || req.url;
+    // Bỏ qua kiểm tra đối với tài liệu API Swagger và các file JSON swagger
+    if (url.includes('/api/v1/docs') || url.includes('/api-json')) {
+      return next();
+    }
+
+    const secretHeader = req.headers['x-api-secret'];
+    const expectedSecret =
+      process.env.API_SECRET_KEY || 'da-truyen-tu-ke-secret-key-9988';
+
+    if (secretHeader !== expectedSecret) {
+      return res.status(403).json({
+        statusCode: 403,
+        message: 'Yêu cầu không hợp lệ. Truy cập bị từ chối.',
+        data: null,
+      });
+    }
+    next();
   });
 
   app.setGlobalPrefix('api');
@@ -125,8 +155,8 @@ Không được thực hiện các hành vi chống phá, tấn công không là
     }),
   );
 
-  await app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  await app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
     console.log(`Swagger running on http://localhost:${PORT}/api/v1/docs`);
   });
 }
