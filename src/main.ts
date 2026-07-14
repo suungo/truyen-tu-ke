@@ -20,12 +20,17 @@ async function bootstrap() {
   const PORT = process.env.PORT || process.env.APP_PORT || 4000;
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+    : [
+        'https://www.truyen-tu-ke.io.vn',
+        'https://truyen-tu-ke.io.vn',
+        'http://localhost:4000',
+        'http://localhost:9090',
+      ];
+
   app.enableCors({
-    origin: [
-      'https://www.truyen-tu-ke.io.vn',
-      'https://truyen-tu-ke.io.vn',
-      'http://localhost:4000',
-    ],
+    origin: allowedOrigins,
     allowedHeaders: [
       'Content-Type',
       'Authorization',
