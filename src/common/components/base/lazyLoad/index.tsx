@@ -1,4 +1,4 @@
-import { Spin, Button } from "antd";
+import { Button } from "antd";
 import React, { Suspense, useState } from "react";
 
 class ErrorBoundary extends React.Component<
@@ -49,7 +49,7 @@ class ErrorBoundary extends React.Component<
               <Button
                 type="primary"
                 onClick={() => window.location.reload()}
-                className="min-w-[120px] h-[40px] flex items-center justify-center bg-gradient-to-r from-[#0096c4] to-[#33B3D6]"
+                className="min-w-[120px] h-[40px] flex items-center justify-center bg-linear-to-r from-[#0096c4] to-[#33B3D6]"
               >
                 Tải lại trang
               </Button>
@@ -69,22 +69,54 @@ const LazyLoad = ({ children }: { children: React.ReactElement }) => {
     <ErrorBoundary>
       <Suspense
         fallback={
-          <div className="fixed inset-0 flex flex-col items-center justify-center z-50 bg-[rgba(255,255,255,0.5)]">
-            <Spin size="large"></Spin>
-            <>
+          <div className="fixed inset-0 flex flex-col items-center justify-center z-50 bg-linear-to-br from-[#E5C88A] to-[#DDB96A]">
+            <div className="flex flex-col items-center text-center max-w-[320px] p-5">
+              <img
+                src="/image-logo.png"
+                alt="Logo"
+                className="w-[140px] h-auto mb-6 animate-pulse"
+                style={{ mixBlendMode: "multiply" }}
+              />
+              <h1 className="font-serif text-2xl font-bold text-[#2D251E] mb-2 tracking-wide">
+                Kho Truyện Tự Kể
+              </h1>
+
               {timeoutReached ? (
-                <div className="flex flex-col items-center mt-4">
-                  <p className="text-gray-600 mb-2">Đang tải lâu bất thường</p>
-                  <p className="text-sm text-gray-500">
+                <div className="flex flex-col items-center">
+                  <p className="text-[#2D251E]/80 text-sm font-medium mb-1">
+                    Đang tải lâu bất thường
+                  </p>
+                  <p className="text-xs text-[#2D251E]/60 mb-6">
                     Vui lòng đợi trong giây lát...
                   </p>
                 </div>
               ) : (
-                <div className="text-gray-600 text-[16px] mt-4">
+                <p className="text-[#2D251E]/80 text-sm font-medium mb-6">
                   Đang tải dữ liệu...
-                </div>
+                </p>
               )}
-            </>
+
+              <div className="w-[180px] h-[4px] bg-[#1E2D3D]/15 rounded-full overflow-hidden relative">
+                <div
+                  className="absolute left-0 top-0 h-full bg-[#1E2D3D] rounded-full"
+                  style={{
+                    width: "40%",
+                    animation: "progress-slide 1.5s infinite ease-in-out",
+                  }}
+                />
+              </div>
+            </div>
+            <style
+              dangerouslySetInnerHTML={{
+                __html: `
+              @keyframes progress-slide {
+                0% { left: -40%; }
+                50% { left: 100%; width: 30%; }
+                100% { left: 100%; width: 0%; }
+              }
+            `,
+              }}
+            />
           </div>
         }
       >

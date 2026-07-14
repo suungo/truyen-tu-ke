@@ -39,7 +39,8 @@ const createCrudBreadcrumbs = (
 };
 
 export const BREADCRUMB_NAME_MAPS: Record<string, string> = {
-  "/dashboard": "Tổng quan",
+  "/dashboard": "Danh sách truyện",
+  "/stories": "Đọc truyện",
   ...createCrudBreadcrumbs("parcel-manager", {
     root: "Quản lý bưu cục",
     list: "Danh sách bưu cục",

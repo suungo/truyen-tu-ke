@@ -1,34 +1,23 @@
 import { LAYOUT_CONSTANTS } from "@/common/constants/layout";
-import { useResponsive } from "@/common/hooks/useResponsive";
-import { Dropdown, Tooltip, type MenuProps } from "antd";
+import { Input, Tooltip, Popover, Modal, message } from "antd";
+import { ChevronLeft, ChevronRight, Maximize, Minimize, User, LogOut, Bell } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getStories } from "@/apis/stories.api";
+import useDebounce from "@/common/hooks/useDebounce";
 import {
-  AlignJustify,
-  Car,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  LockKeyhole,
-  Maximize,
-  Minimize,
-  Package,
-  Plus,
-  Power,
-  Search,
-  Settings,
-  User,
-  UserRound,
-} from "lucide-react";
-import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+  isReaderLoggedIn,
+  getReaderName,
+  getReaderEmail,
+  clearReaderSession,
+  getReaderId,
+  updateReaderInfo,
+} from "@/apis/readers.api";
+import { useNotifications } from "@/common/hooks/useNotifications";
 
-type Props = {
-  onClickOpenMenu: () => void;
-};
-
-export default function Header({ onClickOpenMenu }: Props) {
-  const { isMobile } = useResponsive();
-  const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+export default function Header() {
+  const [isFullscreen] = useState(false);
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -39,82 +28,168 @@ export default function Header({ onClickOpenMenu }: Props) {
     }
   };
   const navigate = useNavigate();
-  // Dropwdown menu items
-  const dropdownItems: MenuProps["items"] = useMemo(
-    () => [
-      {
-        label: (
-          <Link
-            to="/profile-manager/detail?tab=personal-info"
-            className="flex items-center gap-2 px-2"
-          >
-            <UserRound size={18} className="text-gray-700" />
-            <span>Thông tin cá nhân</span>
-          </Link>
-        ),
-        key: "profile",
-      },
-      {
-        label: (
-          <div
-            // onClick={() => setModalChangePassword(true)}
-            className="flex items-center gap-2 px-2"
-          >
-            <LockKeyhole size={18} className="text-gray-700" />
-            <span>Đổi mật khẩu</span>
-          </div>
-        ),
-        key: "change-password",
-      },
-      {
-        label: (
-          <Link to="/setting" className="flex items-center gap-2 px-2">
-            <Settings size={18} className="text-gray-700" />
-            <span>Cài đặt</span>
-          </Link>
-        ),
-        key: "settings",
-      },
-      { type: "divider" },
-      {
-        label: (
-          <div
-            // onClick={showLogoutModal}
-            className="flex items-center gap-2 px-2"
-          >
-            <Power size={18} className="text-gray-700" />
-            <span>Đăng xuất</span>
-          </div>
-        ),
-        key: "logout",
-      },
-    ],
-    [],
+  const [searchParams] = useSearchParams();
+  const [searchValue, setSearchValue] = useState(
+    searchParams.get("search") || "",
   );
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    setSearchValue(searchParams.get("search") || "");
+  }, [searchParams]);
+
+  const debouncedSearch = useDebounce(searchValue, 300);
+
+  const { data: suggestionData, isFetching: isSearching } = useQuery({
+    queryKey: ["search-suggestions", debouncedSearch],
+    queryFn: () => getStories({ search: debouncedSearch, limit: 10 }),
+    enabled: debouncedSearch.trim().length >= 1,
+  });
+
+  const suggestions = suggestionData?.stories || [];
+
+  const handleSearch = (value: string) => {
+    const trimmed = value.trim();
+    setShowDropdown(false);
+    if (trimmed) {
+      navigate(`/dashboard?search=${encodeURIComponent(trimmed)}`);
+    } else {
+      navigate("/dashboard");
+    }
+  };
+
+  const handleLogout = () => {
+    clearReaderSession();
+    navigate("/dashboard");
+    window.location.reload();
+  };
+
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    if (isProfileModalOpen) {
+      setEditName(getReaderName() || "");
+      setEditEmail(getReaderEmail() || "");
+    }
+  }, [isProfileModalOpen]);
+
+  const handleUpdateProfile = async () => {
+    const trimmedName = editName.trim();
+    const trimmedEmail = editEmail.trim();
+
+    if (!trimmedName) {
+      message.error("Tên độc giả không được để trống");
+      return;
+    }
+    if (!trimmedEmail) {
+      message.error("Email không được để trống");
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const readerId = getReaderId();
+      if (!readerId) throw new Error("Chưa đăng nhập");
+
+      await updateReaderInfo(Number(readerId), trimmedName, trimmedEmail);
+      message.success("Cập nhật thông tin thành công!");
+      setIsProfileModalOpen(false);
+      window.location.reload();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const profileContent = (
+    <div className="p-1 space-y-1 w-48 text-[#2D251E]">
+      <button
+        onClick={() => setIsProfileModalOpen(true)}
+        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold hover:bg-[#2D251E]/5 rounded-lg transition-colors cursor-pointer text-left"
+      >
+        <User size={14} />
+        <span>Thông tin cá nhân</span>
+      </button>
+      <div className="h-px bg-[#2D251E]/10 my-1" />
+      <button
+        onClick={handleLogout}
+        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer text-left"
+      >
+        <LogOut size={14} />
+        <span>Đăng xuất</span>
+      </button>
+    </div>
+  );
+
+  const { notifications, unreadCount, handleRead } = useNotifications();
+
+  const notificationContent = (
+    <div className="w-72 text-[#2D251E] flex flex-col max-h-80">
+      <div className="p-3 border-b border-[#2D251E]/10 font-bold flex justify-between items-center bg-[#F7EAD3]/40">
+        <span>Thông báo mới</span>
+        {unreadCount > 0 && (
+          <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">
+            {unreadCount} chưa đọc
+          </span>
+        )}
+      </div>
+      <div className="overflow-y-auto divide-y divide-[#2D251E]/5 grow">
+        {notifications.length === 0 ? (
+          <div className="p-8 text-center text-xs text-[#2D251E]/50">
+            Chưa có thông báo nào.
+          </div>
+        ) : (
+          notifications.map((n) => (
+            <div
+              key={n.id}
+              onClick={() => !n.isRead && handleRead(n.id)}
+              className={`p-3 text-xs cursor-pointer hover:bg-[#2D251E]/5 transition-colors ${
+                !n.isRead ? "bg-amber-50/70 font-semibold" : ""
+              }`}
+            >
+              <div className="flex justify-between items-start gap-1">
+                <span className="text-[#2D251E] truncate max-w-[85%]">{n.title}</span>
+                {!n.isRead && <span className="w-1.5 h-1.5 bg-red-600 rounded-full shrink-0 mt-1" />}
+              </div>
+              <p className="text-[#2D251E]/70 mt-1 line-clamp-3">{n.content}</p>
+              <span className="text-[10px] text-[#2D251E]/40 mt-1 block">
+                {new Date(n.createdAt).toLocaleDateString("vi-VN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <header
-      className="sticky top-0 flex items-center justify-between px-4 lg:px-6 z-50 bg-[#2574c2] border-b border-b-[#d2d3d8] transition-colors duration-300"
+      className="sticky top-0 flex items-center justify-between px-4 lg:px-6 z-50 bg-[#EEDCBE] border-b border-b-[#2D251E]/10 transition-colors duration-300"
       style={{
         height: `${LAYOUT_CONSTANTS.DIMENSIONS.HEADER_HEIGHT}px`,
       }}
     >
       <div className="flex justify-between items-center flex-1">
-        <div className="flex items-center gap-2">
-          {isMobile && (
-            <Tooltip arrow={false} title="Hiển thị menu">
-              <div
-                onClick={onClickOpenMenu}
-                className="cursor-pointer hover:text-gray-500 hover:bg-gray-200 rounded-full p-2 transition-colors"
-              >
-                <AlignJustify size={18} />
-              </div>
-            </Tooltip>
-          )}
+        <div className="flex items-center gap-2 flex-1 mr-4">
+          <Link to="/dashboard" className="flex items-center mr-1">
+            <img
+              src="/image-logo.png"
+              alt="Logo"
+              className="w-10 h-10 rounded-full object-cover border border-[#2D251E]/15 shadow-sm hover:scale-105 transition-transform"
+            />
+          </Link>
 
           <Tooltip arrow={false} title="Quay lại">
             <div
               onClick={() => navigate(-1)}
-              className="cursor-pointer hover:text-gray-500 hover:bg-gray-200 rounded-full p-1 transition-colors"
+              className="hidden sm:flex cursor-pointer text-[#2D251E] hover:bg-[#2D251E]/10 rounded-full p-1 transition-colors"
             >
               <ChevronLeft size={24} />
             </div>
@@ -122,71 +197,78 @@ export default function Header({ onClickOpenMenu }: Props) {
           <Tooltip arrow={false} title="Chuyển tiếp">
             <div
               onClick={() => navigate(1)}
-              className="cursor-pointer hover:text-gray-500 hover:bg-gray-200 rounded-full p-1 transition-colors"
+              className="hidden sm:flex cursor-pointer text-[#2D251E] hover:bg-[#2D251E]/10 rounded-full p-1 transition-colors"
             >
               <ChevronRight size={24} />
             </div>
           </Tooltip>
-          <div
-            className="hidden md:flex items-center w-50 bg-gray-50 dark:bg-gray-800 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-700 rounded-xl px-3 py-2 cursor-pointer transition-all duration-200 group"
-            onClick={() => setIsSearchModalVisible(true)}
-          >
-            <Search className="w-5 h-5 text-gray-400 dark:text-gray-500 mr-2 group-hover:text-blue-500 transition-colors" />
-            <div className="flex-1 flex items-center justify-between">
-              <span className="text-[#989898] dark:text-gray-400 text-sm flex-1">
-                Tìm kiếm...
-              </span>
-              <div className="flex gap-1">
-                <kbd className="px-1.5 py-0.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-[10px] text-gray-500 dark:text-gray-400 font-mono">
-                  ⌘K
-                </kbd>
+          <div className="flex-1 sm:flex-initial sm:w-52 md:w-64 transition-all duration-300 relative">
+            <Input.Search
+              placeholder="Tìm kiếm"
+              className="w-full rounded-xl transition-all duration-200 group"
+              value={searchValue}
+              onChange={(e) => {
+                setSearchValue(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              onBlur={() => setShowDropdown(false)}
+              onSearch={handleSearch}
+              allowClear
+            />
+            {showDropdown && debouncedSearch.trim().length >= 1 && (
+              <div className="absolute left-0 right-0 top-full mt-1.5 bg-[#FDFBF7] border border-[#2D251E]/15 rounded-xl shadow-xl z-50 overflow-hidden max-h-72 overflow-y-auto divide-y divide-[#2D251E]/5">
+                {isSearching ? (
+                  <div className="p-3 text-center text-xs text-[#2D251E]/60">
+                    Đang tìm kiếm...
+                  </div>
+                ) : suggestions.length === 0 ? (
+                  <div className="p-3 text-center text-xs text-[#2D251E]/60">
+                    Không tìm thấy truyện nào
+                  </div>
+                ) : (
+                  suggestions.map((story) => (
+                    <div
+                      key={story.id}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                      }}
+                      onClick={() => {
+                        navigate(`/stories/${story.id}`);
+                        setShowDropdown(false);
+                        setSearchValue("");
+                      }}
+                      className="flex items-center gap-3 p-2.5 hover:bg-[#2D251E]/5 cursor-pointer transition-colors"
+                    >
+                      {story.coverImage ? (
+                        <img
+                          src={story.coverImage}
+                          alt={story.title}
+                          className="w-9 h-12 object-cover rounded-lg border border-[#2D251E]/10 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-9 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-[#2D251E]/10 text-xs shrink-0">
+                          📖
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-[#2D251E] truncate">
+                          {story.title}
+                        </div>
+                        <div className="text-xs text-[#2D251E]/60 truncate">
+                          Tác giả: {story.author}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
-            </div>
+            )}
           </div>
         </div>
         {/* Right side actions */}
-        <div className="flex items-center gap-3 lg:gap-4">
-          <div className="hidden lg:block w-px h-6 bg-gray-200"></div>
-
-          {/* Search button - Mobile */}
-          <button
-            onClick={() => setIsSearchModalVisible(true)}
-            className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            aria-label="Search"
-          >
-            <Search className="w-5 h-5 text-[#144c65] dark:text-gray-300" />
-          </button>
-
-          {/* Quick Actions / Create */}
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: "1",
-                  label: "Tạo đơn hàng mới",
-                  icon: <Package size={16} />,
-                  onClick: () => navigate("/order-manager/create"),
-                },
-                {
-                  key: "2",
-                  label: "Thêm xe / chuyến",
-                  icon: <Car size={16} />,
-                  onClick: () =>
-                    navigate("/vehicle-manager/list?action=create"),
-                },
-              ],
-            }}
-            trigger={["click"]}
-          >
-            <Tooltip arrow={false} title="Tạo nhanh" placement="left">
-              <button
-                className="hidden sm:flex cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors items-center justify-center"
-                aria-label="Quick Create"
-              >
-                <Plus className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-              </button>
-            </Tooltip>
-          </Dropdown>
+        <div className="flex items-center gap-3 lg:gap-4 animate-fadeIn">
+          <div className="hidden lg:block w-px h-6 bg-[#2D251E]/10"></div>
 
           {/* Fullscreen Toggle */}
           <Tooltip
@@ -195,104 +277,129 @@ export default function Header({ onClickOpenMenu }: Props) {
           >
             <button
               onClick={toggleFullscreen}
-              className="hidden md:flex cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors items-center justify-center"
+              className="hidden md:flex cursor-pointer p-2 hover:bg-[#2D251E]/10 rounded-lg transition-colors items-center justify-center"
               aria-label="Toggle Fullscreen"
             >
               {isFullscreen ? (
-                <Minimize className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                <Minimize className="w-5 h-5 text-[#2D251E]" />
               ) : (
-                <Maximize className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                <Maximize className="w-5 h-5 text-[#2D251E]" />
               )}
             </button>
           </Tooltip>
 
-          {/* Help / Support */}
-          {/* <Tooltip title="Trợ giúp & Hướng dẫn" placement="bottom">
-              <button
-                onClick={() => navigate("/help-center")}
-                className="hidden sm:flex cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors items-center justify-center"
-                aria-label="Help"
-              >
-                <CircleHelp className="w-[20px] h-[20px] text-gray-700 dark:text-gray-300" />
-              </button>
-            </Tooltip> */}
-
-          {/* Theme / Dark Mode Switcher */}
-          {/* <Dropdown
-              menu={{
-                items: [
-                  {
-                    key: "light",
-                    label: "Giao diện Sáng",
-                    onClick: () => setTheme("light"),
-                    icon: <Sun size={16} />,
-                  },
-                  {
-                    key: "dark",
-                    label: "Giao diện Tối",
-                    onClick: () => setTheme("dark"),
-                    icon: <Moon size={16} />,
-                  },
-                  {
-                    key: "system",
-                    label: "Tự động (Hệ thống)",
-                    onClick: () => setTheme("system"),
-                    icon: <Monitor size={16} />,
-                  },
-                ],
-              }}
-              trigger={["click"]}
+          {/* Bell Icon (Only for logged in readers) */}
+          {isReaderLoggedIn() && (
+            <Popover
+              content={notificationContent}
+              trigger="hover"
               placement="bottomRight"
+              arrow={false}
             >
-              <Tooltip title="Chế độ hiển thị" placement="bottom">
-                <button
-                  className="hidden sm:flex cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors items-center justify-center"
-                  aria-label="Toggle Theme"
-                >
-                  {theme === "light" ? (
-                    <Sun className="w-[20px] h-[20px] text-gray-700 dark:text-gray-300" />
-                  ) : theme === "dark" ? (
-                    <Moon className="w-[20px] h-[20px] text-gray-700 dark:text-gray-300" />
-                  ) : (
-                    <Monitor className="w-[20px] h-[20px] text-gray-700 dark:text-gray-300" />
-                  )}
-                </button>
-              </Tooltip>
-            </Dropdown> */}
-
-          {/* Notifications Dropdown */}
-          {/* <NotificationDropdown /> */}
-
-          {/* User profile */}
-          <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
-            <button
-              className="flex items-center justify-center w-10 h-10 rounded-full text-white hover:opacity-90 transition-opacity"
-              aria-label="User menu"
-            >
-              <User className="w-5 h-5" />
-            </button>
-
-            <Dropdown arrow menu={{ items: dropdownItems }}>
-              <div className="flex items-center gap-2 justify-center cursor-pointer">
-                <div className="hidden md:flex flex-col items-start dark:text-white">
-                  <span className="text-[14px] font-semibold text-black dark:text-white">
-                    LEE MIN HONG
+              <div className="relative cursor-pointer p-2 hover:bg-[#2D251E]/10 rounded-lg transition-colors items-center justify-center flex mr-1.5">
+                <Bell className="w-5 h-5 text-[#2D251E]" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-600 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center animate-pulse">
+                    {unreadCount}
                   </span>
-                  <span className="text-[12px] text-gray-500 dark:text-gray-400">
-                    Admin
-                  </span>
-                </div>
-                <div className="flex items-center justify-center">
-                  <ChevronDown
-                    size={16}
-                    className="text-black dark:text-white"
-                  />
-                </div>
+                )}
               </div>
-            </Dropdown>
-          </div>
+            </Popover>
+          )}
+
+          {isReaderLoggedIn() ? (
+            <Popover
+              content={profileContent}
+              trigger="click"
+              placement="bottomRight"
+              arrow={false}
+            >
+              <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity bg-[#2D251E]/5 hover:bg-[#2D251E]/10 px-3 py-1.5 rounded-full border border-[#2D251E]/10">
+                <div className="w-6 h-6 rounded-full bg-[#1E2D3D] text-[#EEDCBE] flex items-center justify-center font-bold text-xs">
+                  {getReaderName()?.charAt(0).toUpperCase() || "D"}
+                </div>
+                <span className="hidden sm:block text-xs font-bold text-[#2D251E] truncate max-w-24">
+                  {getReaderName()}
+                </span>
+              </div>
+            </Popover>
+          ) : (
+            <button
+              onClick={() => navigate("/auth/login")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#2D251E] bg-[#2D251E]/5 hover:bg-[#2D251E]/15 border border-[#2D251E]/10 transition-all cursor-pointer"
+            >
+              <User size={14} />
+              <span>Đăng nhập</span>
+            </button>
+          )}
         </div>
       </div>
+
+      <Modal
+        title={
+          <div className="text-[#2D251E] font-bold text-lg border-b border-[#2D251E]/10 pb-2">
+            👤 Thông tin cá nhân
+          </div>
+        }
+        open={isProfileModalOpen}
+        onCancel={() => setIsProfileModalOpen(false)}
+        footer={null}
+        width={400}
+        centered
+        styles={{
+          body: {
+            backgroundColor: "#F7EAD3",
+            color: "#2D251E",
+          },
+          header: {
+            backgroundColor: "#F7EAD3",
+            color: "#2D251E",
+          }
+        }}
+      >
+        <div className="space-y-4 pt-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-[#2D251E]/80">Tên độc giả</label>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="Nhập tên độc giả..."
+              className="w-full px-4 py-3 border border-[#2D251E]/20 rounded-xl bg-white/70 text-[#2D251E] outline-none focus:bg-white focus:border-[#2D251E] transition-all text-sm"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-[#2D251E]/80">Email độc giả</label>
+            <input
+              type="email"
+              value={editEmail}
+              onChange={(e) => setEditEmail(e.target.value)}
+              placeholder="nhap.email@cua.ban"
+              className="w-full px-4 py-3 border border-[#2D251E]/20 rounded-xl bg-white/70 text-[#2D251E] outline-none focus:bg-white focus:border-[#2D251E] transition-all text-sm"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => setIsProfileModalOpen(false)}
+              className="flex-1 py-2.5 border border-[#2D251E]/20 text-[#2D251E] rounded-xl text-xs font-bold hover:bg-[#2D251E]/5 transition-all cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={handleUpdateProfile}
+              disabled={updating}
+              className="flex-1 py-2.5 text-white rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+              style={{
+                background: "linear-gradient(135deg, #1E2D3D, #2D251E)",
+              }}
+            >
+              {updating ? "Đang cập nhật..." : "Lưu thay đổi"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </header>
   );
 }

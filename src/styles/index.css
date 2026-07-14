@@ -2,23 +2,21 @@
 
 :root {
   /* Color */
-  --color-primary: #1dbfaf;
-  --color-violet: #2b4dc9;
-  --color-orange: #c3841f;
-  --color-green: #3f9c12;
-  --color-red: #b82722;
+  --color-primary: #1E2D3D;
+  --color-violet: #2D251E;
+  
+  --color-primary-dark: #1E2D3D;
+  --bg-hero: #E5C88A;
+  --bg-content: #DDB96A;
+  --color-main-text: #2D251E;
+  --color-accent-warm: #C2410C;
+  --color-accent-gold: #D97706;
+  --bg-header: #EEDCBE;
   --color-white: #ffffff;
   --color-black: #272727;
-  --color-primary-400: #4fe4d3;
-  --color-primary-500: #2edcc7;
   --color-red-text: #e61b1b;
 
   /* Background */
-  --bg-violet: #b1c1fd;
-  --bg-orange: #fde0b1;
-  --bg-green: #bcefa2;
-  --bg-red: #efa5a2;
-  --bg-base: #e6fdfb;
   --bg-white: #ffffff;
 
   /* Size */
@@ -35,6 +33,16 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Parchment / aged paper effect for banner */
+.parchment-banner {
+  background-color: #C9A86C;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeBlend in='SourceGraphic' mode='multiply'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #D4A85A 0%, #C9A86C 40%, #BF9B5A 100%);
+  background-blend-mode: overlay;
+  border: 1px solid #B8945040;
 }
 
 ::-webkit-scrollbar {
@@ -160,4 +168,12 @@ html {
   .scrollbar-hide:hover::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
   }
+}
+
+/* Custom styles for search input icon */
+.ant-input-search .ant-input-search-button .anticon,
+.ant-input-search .ant-input-suffix .anticon-search,
+.ant-input-search .ant-input-suffix .ant-input-search-icon,
+.ant-input-search-icon {
+  color: #1E2D3D !important;
 }

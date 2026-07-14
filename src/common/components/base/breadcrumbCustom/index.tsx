@@ -59,7 +59,7 @@ export default function BreadcrumbCustom() {
               {item.title}
             </button>
           ) : (
-            <span className="2xl:text-[16px] text-[14px] text-[#00d4db] font-medium ">
+            <span className="2xl:text-[18px] text-[14px] text-[#C2410C] font-semibold ">
               {item.title}
             </span>
           ),
