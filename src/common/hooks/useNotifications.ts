@@ -44,7 +44,8 @@ export function useNotifications() {
   useEffect(() => {
     if (!readerId || !isReaderLoggedIn()) return;
 
-    const socket: Socket = io("/notifications", {
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || "https://api.truyen-tu-ke.io.vn";
+    const socket: Socket = io(`${socketUrl}/notifications`, {
       query: { readerId },
       transports: ["polling", "websocket"],
       upgrade: true,
