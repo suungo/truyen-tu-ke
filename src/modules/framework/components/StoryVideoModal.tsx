@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { getDefaultGeminiKey } from "@/common/utils/geminiKey";
 import {
   Modal,
   Button,
@@ -53,9 +54,7 @@ const FONT_PRESETS = [
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
-  x: number,
   maxWidth: number,
-  lineHeight: number,
 ): string[] {
   const words = text.split(" ");
   const lines: string[] = [];
@@ -151,7 +150,7 @@ function drawFrame(
   ctx.globalAlpha = alpha;
   ctx.font = `18px ${fontFamily}`;
   ctx.fillStyle = "#f0e6ff";
-  const lines = wrapText(ctx, paragraph, 56, W - 112, 32);
+  const lines = wrapText(ctx, paragraph, W - 112);
   const totalTextH = lines.length * 32;
   const startY = H / 2 - totalTextH / 2 + 30;
   lines.forEach((line, i) => {
@@ -243,12 +242,7 @@ export default function StoryVideoModal({
   const [totalParas, setTotalParas] = useState(0);
 
   // Settings
-  const [apiKey, setApiKey] = useState(
-    () =>
-      import.meta.env.VITE_GEMINI_API_KEY?.trim() ||
-      localStorage.getItem("gemini_api_key") ||
-      "",
-  );
+  const [apiKey, setApiKey] = useState(() => getDefaultGeminiKey());
   const [useGemini, setUseGemini] = useState(false);
   const [bgPreset, setBgPreset] = useState(BG_PRESETS[0]);
   const [fontFamily, setFontFamily] = useState(FONT_PRESETS[0].value);

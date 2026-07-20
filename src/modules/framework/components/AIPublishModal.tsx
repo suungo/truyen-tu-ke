@@ -8,6 +8,7 @@ import {
   EyeOutlined,
 } from "@ant-design/icons";
 import type { FrameworkEpisode, FrameworkPhase } from "@/apis/framework.api";
+import { getDefaultGeminiKey } from "@/common/utils/geminiKey";
 
 interface Props {
   open: boolean;
@@ -80,12 +81,7 @@ export default function AIPublishModal({
   storySetting,
   onPublish,
 }: Props) {
-  const [apiKey, setApiKey] = useState(
-    () =>
-      import.meta.env.VITE_GEMINI_API_KEY?.trim() ||
-      localStorage.getItem("gemini_api_key") ||
-      "",
-  );
+  const [apiKey, setApiKey] = useState(() => getDefaultGeminiKey());
   const [generatedContent, setGeneratedContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
