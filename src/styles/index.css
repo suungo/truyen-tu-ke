@@ -1,1 +1,163 @@
 @import "tailwindcss";
+
+:root {
+  /* Color */
+  --color-primary: #1dbfaf;
+  --color-violet: #2b4dc9;
+  --color-orange: #c3841f;
+  --color-green: #3f9c12;
+  --color-red: #b82722;
+  --color-white: #ffffff;
+  --color-black: #272727;
+  --color-primary-400: #4fe4d3;
+  --color-primary-500: #2edcc7;
+  --color-red-text: #e61b1b;
+
+  /* Background */
+  --bg-violet: #b1c1fd;
+  --bg-orange: #fde0b1;
+  --bg-green: #bcefa2;
+  --bg-red: #efa5a2;
+  --bg-base: #e6fdfb;
+  --bg-white: #ffffff;
+
+  /* Size */
+  --height-input-large: 44px;
+  --height-input-medium: 40px;
+  --height-input-small: 36px;
+  --height-button-large: 44px;
+  --height-button-medium: 40px;
+  --height-button-small: 36px;
+  --h-lg: 44px;
+  --h-md: 40px;
+  --h-sm: 36px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+  border-radius: 4px;
+}
+
+
+@layer utilities {
+  /* Tailwind v4 đã bỏ space-y-* / space-x-*; thêm lại để tương thích ngược */
+  .space-y-1 > * + * {
+    margin-top: 0.25rem;
+  }
+  .space-y-2 > * + * {
+    margin-top: 0.5rem;
+  }
+  .space-y-2\.5 > * + * {
+    margin-top: 0.625rem;
+  }
+  .space-y-3 > * + * {
+    margin-top: 0.75rem;
+  }
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+  .space-y-5 > * + * {
+    margin-top: 1.25rem;
+  }
+  .space-y-6 > * + * {
+    margin-top: 1.5rem;
+  }
+  .space-y-8 > * + * {
+    margin-top: 2rem;
+  }
+  .space-x-1 > * + * {
+    margin-left: 0.25rem;
+  }
+  .space-x-2 > * + * {
+    margin-left: 0.5rem;
+  }
+  .space-x-3 > * + * {
+    margin-left: 0.75rem;
+  }
+  .space-x-4 > * + * {
+    margin-left: 1rem;
+  }
+
+  .h-input-lg {
+    height: var(--h-lg);
+  }
+  .h-input-md {
+    height: var(--h-md);
+  }
+  .h-input-sm {
+    height: var(--h-sm);
+  }
+
+  .h-btn-lg {
+    height: var(--h-lg);
+  }
+  .h-btn-md {
+    height: var(--h-md);
+  }
+  .h-btn-sm {
+    height: var(--h-sm);
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Scrollbar ẩn mặc định, hiển thị khi hover */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide:hover {
+    -ms-overflow-style: auto;
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-hide:hover::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-hide:hover::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  .scrollbar-hide:hover::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+
+  .scrollbar-hide:hover::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+}
