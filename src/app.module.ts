@@ -10,12 +10,15 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { ReaderModule } from './modules/reader/reader.module';
 import { FrameworkModule } from './modules/framework/framework.module';
 import { ImagesModule } from './modules/images/images.module';
+import { VideoGeneratorModule } from './modules/video-generator/video-generator.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.development', '.env'],
+      envFilePath: process.env.NODE_ENV === 'production'
+        ? ['.env']
+        : ['.env.development', '.env'],
     }),
 
     ThrottlerModule.forRoot({
@@ -39,6 +42,7 @@ import { ImagesModule } from './modules/images/images.module';
     ReaderModule,
     FrameworkModule,
     ImagesModule,
+    VideoGeneratorModule,
   ],
   providers: [
     {

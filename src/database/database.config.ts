@@ -5,7 +5,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 export const getDatabaseConfig = (
   configService: ConfigService,
 ): TypeOrmModuleOptions => {
-  const url = configService.get<string>('DATABASE_URL');
+  const url = configService.get<string>('DATABASE_URL')?.trim();
   return {
     type: 'postgres',
     ...(url
