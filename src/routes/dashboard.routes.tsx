@@ -6,6 +6,7 @@ import { storiesRoutes } from "./stories.routes";
 import { frameworksRoutes } from "./frameworks.routes";
 import { readersRoutes } from "./readers.routes";
 import { notificationsRoutes } from "./notifications.routes";
+import { videoGeneratorRoutes } from "./video-generator.routes";
 
 const DashboardPage = React.lazy(() => import("@/modules/dashboarch/pages"));
 
@@ -26,4 +27,5 @@ export const dashboardRoutes: RouteObject[] = [
   ...frameworksRoutes,
   ...readersRoutes,
   ...notificationsRoutes,
+  ...videoGeneratorRoutes,
 ];

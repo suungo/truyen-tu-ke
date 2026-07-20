@@ -84,4 +84,5 @@ export const BREADCRUMB_NAME_MAPS: Record<string, string> = {
   "/notifications": "Thông báo",
   "/setting": "Cài đặt hệ thống",
   "/report-statistic-manager": "Báo cáo & thống kê",
+  "/video-generator": "Tạo Video Tự Động",
 };

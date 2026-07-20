@@ -1,5 +1,5 @@
 import { Menu as AntMenu, Layout, type MenuProps } from "antd";
-import { BarChart3, BookOpen, Tags, CheckSquare, BookMarked, Users, Bell } from "lucide-react";
+import { BarChart3, BookOpen, Tags, CheckSquare, BookMarked, Users, Bell, Video } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -16,6 +16,7 @@ const iconMap: Record<string, IconComponent> = {
   frameworks: BookMarked,
   readers: Users,
   notifications: Bell,
+  "video-generator": Video,
 };
 
 // Mapping từ menu key đến route
@@ -27,6 +28,7 @@ const routeMap: Record<string, string> = {
   frameworks: "/frameworks",
   readers: "/readers",
   notifications: "/notifications",
+  "video-generator": "/video-generator",
 };
 
 export default function Menu() {
@@ -58,6 +60,7 @@ export default function Menu() {
       "frameworks/create": "frameworks",
       readers: "readers",
       notifications: "notifications",
+      "video-generator": "video-generator",
     };
 
     if (routeMapping[cleanPath]) {
@@ -65,7 +68,7 @@ export default function Menu() {
     }
 
     // Danh sách các route cha có trong menu
-    const partialMatches = ["dashboard", "stories", "genres", "pending-stories", "frameworks", "readers", "notifications"];
+    const partialMatches = ["dashboard", "stories", "genres", "pending-stories", "frameworks", "readers", "notifications", "video-generator"];
 
     const partialMatch = partialMatches.find((key) => cleanPath.includes(key));
     return partialMatch || cleanPath;
@@ -209,6 +212,18 @@ export default function Menu() {
               className="cursor-pointer text-[16px] font-medium"
             >
               Quản lý Thông báo
+            </div>
+          ),
+        },
+        {
+          key: "video-generator",
+          icon: renderIcon("video-generator"),
+          label: (
+            <div
+              onClick={() => handleNavigate("/video-generator")}
+              className="cursor-pointer text-[16px] font-medium"
+            >
+              Tạo Video
             </div>
           ),
         },
