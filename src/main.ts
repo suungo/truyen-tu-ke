@@ -25,6 +25,8 @@ async function bootstrap() {
     : [
         'https://www.truyen-tu-ke.io.vn',
         'https://truyen-tu-ke.io.vn',
+        'https://www.admin.truyen-tu-ke.io.vn',
+        'https://admin.truyen-tu-ke.io.vn',
         'http://localhost:4000',
         'http://localhost:9090',
       ];
