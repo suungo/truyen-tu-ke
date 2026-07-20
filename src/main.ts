@@ -48,8 +48,14 @@ async function bootstrap() {
   // Middleware bảo mật Header ngăn gọi API trực tiếp
   app.use((req: Request, res: Response, next: () => void) => {
     const url = req.originalUrl || req.url;
-    // Bỏ qua kiểm tra đối với tài liệu API Swagger và các file JSON swagger
-    if (url.includes('/api/v1/docs') || url.includes('/api-json')) {
+    // Bỏ qua kiểm tra đối với Swagger, WebSocket handshake (/socket.io) và Health Check (/health, /ping)
+    if (
+      url.includes('/api/v1/docs') ||
+      url.includes('/api-json') ||
+      url.includes('/socket.io') ||
+      url.includes('/health') ||
+      url.includes('/ping')
+    ) {
       return next();
     }
 
@@ -65,6 +71,11 @@ async function bootstrap() {
       });
     }
     next();
+  });
+
+  // Route Health Check phục vụ UptimeRobot / Cron-Job ping giữ server không ngủ đông
+  app.use('/health', (_req: Request, res: Response) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
   app.setGlobalPrefix('api');
