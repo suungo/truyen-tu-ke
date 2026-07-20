@@ -6,11 +6,12 @@ import { QueryClient } from "@tanstack/react-query";
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: false, // Tắt retry của React Query, để axios-retry xử lý
-      refetchOnWindowFocus: false, // Không tự động refetch khi focus window
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+      refetchOnWindowFocus: false,
     },
     mutations: {
-      retry: false, // Tắt retry cho mutations
+      retry: false,
     },
   },
 });

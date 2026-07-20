@@ -46,7 +46,12 @@ export function useNotifications() {
 
     const socket: Socket = io("/notifications", {
       query: { readerId },
-      transports: ["websocket"],
+      transports: ["polling", "websocket"],
+      upgrade: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 2000,
+      timeout: 30000,
     });
 
     socket.on("connect", () => {
